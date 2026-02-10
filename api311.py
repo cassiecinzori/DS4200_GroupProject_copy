@@ -39,7 +39,9 @@ class Year:
             self.cache = self.data[self.data["neighborhood"] == neighborhood]
         return self.data[self.data["neighborhood"] == neighborhood]
 
-    def _get_monthly_counts(self, col: str) -> pd.DataFrame:
+    def _get_monthly_counts(
+        self, col: str, full: Optional[bool] = True
+    ) -> pd.DataFrame:
         """
         For a given column, return a dataframe with months as columns and counts of requests per month as values.
         If col is open_dt or closed_dt, return total counts per month.
@@ -51,16 +53,21 @@ class Year:
         Returns:
         pd.DataFrame -- a dataframe with months as columns and counts of requests per month as values.
         """
-        self.data["open_dt"] = pd.to_datetime(self.data["open_dt"])
-        self.data["closed_dt"] = pd.to_datetime(self.data["closed_dt"])
-        self.data["open_month_name"] = self.data["open_dt"].dt.month_name()
-        self.data["open_month_num"] = self.data["open_dt"].dt.month
-        self.data["closed_month_name"] = self.data["closed_dt"].dt.month_name()
-        self.data["closed_month_num"] = self.data["closed_dt"].dt.month
+        if full:
+            source = self.data
+        else:
+            source = self.cache
+
+        source["open_dt"] = pd.to_datetime(source["open_dt"])
+        source["closed_dt"] = pd.to_datetime(source["closed_dt"])
+        source["open_month_name"] = source["open_dt"].dt.month_name()
+        source["open_month_num"] = source["open_dt"].dt.month
+        source["closed_month_name"] = source["closed_dt"].dt.month_name()
+        source["closed_month_num"] = source["closed_dt"].dt.month
 
         if col in ("open_dt", "closed_dt"):
             monthly_groups = (
-                self.data.groupby(["open_month_num", "open_month_name"])
+                source.groupby(["open_month_num", "open_month_name"])
                 .aggregate("count")
                 .reset_index()
             )
@@ -75,11 +82,9 @@ class Year:
 
             """For each unique val in col, make months columns with counts of requests per month as corresponding row values"""
             monthly_requests = {}
-            for month in self.data["closed_month_name"].unique():
+            for month in source["closed_month_name"].unique():
                 monthly_requests[month] = (
-                    self.data[self.data["closed_month_name"] == month]
-                    .groupby(col)
-                    .size()
+                    source[source["closed_month_name"] == month].groupby(col).size()
                 )
                 month_order = list(calendar.month_name)[1:]
             return (
@@ -89,9 +94,9 @@ class Year:
                 .fillna(0)
             )
 
-    def summarize(self, col: str) -> dict:
+    def summarize(self, col: str, full: Optional[bool] = True) -> dict:
         describe = self.data[col].describe()
-        monthly_counts = self._get_monthly_counts(col)
+        monthly_counts = self._get_monthly_counts(col, full=full)
         unique = describe["unique"]
         unique_value_counts = self.data[col].value_counts()
 
