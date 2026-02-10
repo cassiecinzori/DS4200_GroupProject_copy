@@ -32,12 +32,12 @@ class Year:
             ).add_to(map)
         return map
 
-    def get_neighborhood_subset(
-        self, neighborhood: str, cache: Optional[bool] = False
+    def get_subset(
+        self, target_col: str, target_vals: list, cache: Optional[bool] = False
     ) -> pd.DataFrame:
         if cache:
-            self.cache = self.data[self.data["neighborhood"] == neighborhood]
-        return self.data[self.data["neighborhood"] == neighborhood]
+            self.cache = self.data[self.data[target_col].isin(target_vals)]
+        return self.data[self.data[target_col].isin(target_vals)]
 
     def _get_monthly_counts(
         self, col: str, full: Optional[bool] = True
