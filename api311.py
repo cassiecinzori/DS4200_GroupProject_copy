@@ -97,7 +97,6 @@ class Year:
     def summarize(self, col: str, full: Optional[bool] = True) -> dict:
         describe = self.data[col].describe()
         monthly_counts = self._get_monthly_counts(col, full=full)
-        unique = describe["unique"]
         unique_value_counts = self.data[col].value_counts()
 
         return {
