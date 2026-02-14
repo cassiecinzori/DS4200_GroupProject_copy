@@ -1,0 +1,7 @@
+dash
+folium
+pandas
+geopandas
+dash-leaflet
+matplotlib
+seaborn
