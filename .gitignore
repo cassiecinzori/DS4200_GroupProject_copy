@@ -1,4 +1,5 @@
 data/311_2015.csv
 data/311_2025.csv
 .venv/
-venv/
+venv/.DS_Store
+output/
