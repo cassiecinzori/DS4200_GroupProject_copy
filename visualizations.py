@@ -11,23 +11,22 @@ import pandas as pd
 import numpy as np
 import os
 
-# Set consistent style
 sns.set_style("whitegrid")
-plt.rcParams['figure.facecolor'] = 'white'
-plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams["figure.facecolor"] = "white"
+plt.rcParams["font.family"] = "sans-serif"
 
 
 def clean_request_type_name(name):
     """Make request type names more readable"""
     replacements = {
-        'Missed Trash/Recycling/Yard Waste/Bulk Item': 'Missed Trash/Recycling',
-        'Request for Snow Plowing': 'Snow Plowing',
-        'Request for Pothole Repair': 'Pothole Repair',
-        'Street Light Outages': 'Street Lights',
-        'Pothole Repair (Internal)': 'Pothole (Internal)',
-        'Poor Conditions of Property': 'Poor Property Conditions',
-        'Improper Storage of Trash (Barrels)': 'Improper Trash Storage',
-        'Parks Lighting/Electrical Issues': 'Parks Lighting',
+        "Missed Trash/Recycling/Yard Waste/Bulk Item": "Missed Trash/Recycling",
+        "Request for Snow Plowing": "Snow Plowing",
+        "Request for Pothole Repair": "Pothole Repair",
+        "Street Light Outages": "Street Lights",
+        "Pothole Repair (Internal)": "Pothole (Internal)",
+        "Poor Conditions of Property": "Poor Property Conditions",
+        "Improper Storage of Trash (Barrels)": "Improper Trash Storage",
+        "Parks Lighting/Electrical Issues": "Parks Lighting",
     }
     return replacements.get(name, name)
 
@@ -51,34 +50,56 @@ def create_monthly_heatmap(year15, year25, save=True):
     monthly_25_filtered = monthly_25.reindex(top_types).fillna(0)
 
     # Clean up the labels
-    monthly_15_filtered.index = [clean_request_type_name(x) for x in monthly_15_filtered.index]
-    monthly_25_filtered.index = [clean_request_type_name(x) for x in monthly_25_filtered.index]
+    monthly_15_filtered.index = [
+        clean_request_type_name(x) for x in monthly_15_filtered.index
+    ]
+    monthly_25_filtered.index = [
+        clean_request_type_name(x) for x in monthly_25_filtered.index
+    ]
 
     # Create figure with side-by-side subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 7))
 
     # 2015 heatmap
-    sns.heatmap(monthly_15_filtered, annot=True, fmt='.0f',
-                cmap='YlOrRd', cbar_kws={'label': 'Number of Requests'},
-                ax=ax1, linewidths=0.5, vmin=0)
-    ax1.set_title('2015', fontsize=16, fontweight='bold', pad=15)
-    ax1.set_xlabel('Month', fontsize=12)
-    ax1.set_ylabel('Request Type', fontsize=12)
-    ax1.tick_params(axis='x', rotation=45, labelsize=10)
-    ax1.tick_params(axis='y', rotation=0, labelsize=10)
+    sns.heatmap(
+        monthly_15_filtered,
+        annot=True,
+        fmt=".0f",
+        cmap="YlOrRd",
+        cbar_kws={"label": "Number of Requests"},
+        ax=ax1,
+        linewidths=0.5,
+        vmin=0,
+    )
+    ax1.set_title("2015", fontsize=16, fontweight="bold", pad=15)
+    ax1.set_xlabel("Month", fontsize=12)
+    ax1.set_ylabel("Request Type", fontsize=12)
+    ax1.tick_params(axis="x", rotation=45, labelsize=10)
+    ax1.tick_params(axis="y", rotation=0, labelsize=10)
 
     # 2025 heatmap
-    sns.heatmap(monthly_25_filtered, annot=True, fmt='.0f',
-                cmap='YlOrRd', cbar_kws={'label': 'Number of Requests'},
-                ax=ax2, linewidths=0.5, vmin=0)
-    ax2.set_title('2025', fontsize=16, fontweight='bold', pad=15)
-    ax2.set_xlabel('Month', fontsize=12)
-    ax2.set_ylabel('Request Type', fontsize=12)
-    ax2.tick_params(axis='x', rotation=45, labelsize=10)
-    ax2.tick_params(axis='y', rotation=0, labelsize=10)
+    sns.heatmap(
+        monthly_25_filtered,
+        annot=True,
+        fmt=".0f",
+        cmap="YlOrRd",
+        cbar_kws={"label": "Number of Requests"},
+        ax=ax2,
+        linewidths=0.5,
+        vmin=0,
+    )
+    ax2.set_title("2025", fontsize=16, fontweight="bold", pad=15)
+    ax2.set_xlabel("Month", fontsize=12)
+    ax2.set_ylabel("Request Type", fontsize=12)
+    ax2.tick_params(axis="x", rotation=45, labelsize=10)
+    ax2.tick_params(axis="y", rotation=0, labelsize=10)
 
-    plt.suptitle('Seasonal Patterns in Boston 311 Requests',
-                 fontsize=18, fontweight='bold', y=0.98)
+    plt.suptitle(
+        "Seasonal Patterns in Boston 311 Requests",
+        fontsize=18,
+        fontweight="bold",
+        y=0.98,
+    )
     plt.tight_layout()
     plt.show()
     return fig
@@ -90,23 +111,17 @@ def create_composition_bars(year15, year25, save=True):
 
     # Clean blank neighborhoods
     data15 = year15.data[
-        year15.data["neighborhood"].notna() &
-        (year15.data["neighborhood"].str.strip() != "")
+        year15.data["neighborhood"].notna()
+        & (year15.data["neighborhood"].str.strip() != "")
     ]
 
     data25 = year25.data[
-        year25.data["neighborhood"].notna() &
-        (year25.data["neighborhood"].str.strip() != "")
+        year25.data["neighborhood"].notna()
+        & (year25.data["neighborhood"].str.strip() != "")
     ]
 
     # Get top 6 neighborhoods by request volume
-    top_neighborhoods = (
-        data15["neighborhood"]
-        .value_counts()
-        .head(6)
-        .index
-        .tolist()
-    )
+    top_neighborhoods = data15["neighborhood"].value_counts().head(6).index.tolist()
 
     # Create 2x3 grid of subplots
     fig, axes = plt.subplots(2, 3, figsize=(20, 12))
@@ -122,10 +137,9 @@ def create_composition_bars(year15, year25, save=True):
         hood_25 = data25[data25["neighborhood"] == hood]
 
         # Get top 5 combined request types across both years
-        combined_counts = pd.concat([
-            hood_15["type"],
-            hood_25["type"]
-        ]).value_counts().head(5)
+        combined_counts = (
+            pd.concat([hood_15["type"], hood_25["type"]]).value_counts().head(5)
+        )
 
         top_types = combined_counts.index.tolist()
 
@@ -139,38 +153,30 @@ def create_composition_bars(year15, year25, save=True):
 
         # Plot 2015 bars
         ax.barh(
-            [y - bar_height/2 for y in y_positions],
+            [y - bar_height / 2 for y in y_positions],
             counts_15,
             height=bar_height,
             color=colors[0],
             edgecolor="black",
             linewidth=0.6,
-            label="2015" if idx == 0 else ""
+            label="2015" if idx == 0 else "",
         )
 
         # Plot 2025 bars
         ax.barh(
-            [y + bar_height/2 for y in y_positions],
+            [y + bar_height / 2 for y in y_positions],
             counts_25,
             height=bar_height,
             color=colors[1],
             edgecolor="black",
             linewidth=0.6,
-            label="2025" if idx == 0 else ""
+            label="2025" if idx == 0 else "",
         )
 
         ax.set_yticks(y_positions)
-        ax.set_yticklabels(
-            [clean_request_type_name(t) for t in top_types],
-            fontsize=9
-        )
+        ax.set_yticklabels([clean_request_type_name(t) for t in top_types], fontsize=9)
 
-        ax.set_title(
-            hood,
-            fontsize=13,
-            fontweight="bold",
-            pad=8
-        )
+        ax.set_title(hood, fontsize=13, fontweight="bold", pad=8)
 
         ax.set_xlabel("Requests", fontsize=10)
         ax.grid(axis="x", linestyle="--", alpha=0.3)
@@ -186,7 +192,7 @@ def create_composition_bars(year15, year25, save=True):
         "How Neighborhood Request Patterns Changed (2015 → 2025)",
         fontsize=18,
         fontweight="bold",
-        y=0.95
+        y=0.95,
     )
 
     fig.legend(
@@ -196,7 +202,7 @@ def create_composition_bars(year15, year25, save=True):
         bbox_to_anchor=(0.5, 0.92),
         ncol=2,
         fontsize=11,
-        frameon=False
+        frameon=False,
     )
 
     plt.tight_layout(rect=[0, 0, 1, 0.92])
@@ -215,8 +221,7 @@ def create_signature_drift(year15, year25, save=True):
     sigs_15 = sa.build_signatures(year15.data, min_requests=30)
     sigs_25 = sa.build_signatures(year25.data, min_requests=30)
 
-    # Calculate cosine distance between 2015 and 2025 signatures
-    drift = sa.compare_signatures(sigs_15, sigs_25, metric="cosine")
+    drift = sa.compare_signatures(sigs_15, sigs_25)
     drift = drift.sort_values("distance", ascending=False).reset_index(drop=True)
 
     # Get average request counts for context
@@ -279,7 +284,9 @@ def create_signature_drift(year15, year25, save=True):
 
     ax.set_xlabel("Neighborhoods (ranked by drift)", fontsize=13, fontweight="bold")
     ax.set_ylabel("Cosine Distance (2015 → 2025)", fontsize=13, fontweight="bold")
-    ax.set_title("311 Signature Drift by Neighborhood", fontsize=18, fontweight="bold", pad=30)
+    ax.set_title(
+        "311 Signature Drift by Neighborhood", fontsize=18, fontweight="bold", pad=30
+    )
 
     ax.grid(axis="y", alpha=0.3, linestyle="--")
 
@@ -309,32 +316,48 @@ def create_cluster_comparison(year15, year25, save=True):
     # Create side-by-side comparison
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
 
-    cluster_colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12']
+    cluster_colors = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12"]
 
     # 2015 cluster distribution
     cluster_counts_15 = labels_15.value_counts().sort_index()
-    ax1.bar(cluster_counts_15.index, cluster_counts_15.values,
-            color=cluster_colors, edgecolor='black', linewidth=1.5, alpha=0.8)
-    ax1.set_title('2015 Neighborhood Clusters', fontsize=14, fontweight='bold', pad=15)
-    ax1.set_xlabel('Cluster Group', fontsize=12)
-    ax1.set_ylabel('Number of Neighborhoods', fontsize=12)
+    ax1.bar(
+        cluster_counts_15.index,
+        cluster_counts_15.values,
+        color=cluster_colors,
+        edgecolor="black",
+        linewidth=1.5,
+        alpha=0.8,
+    )
+    ax1.set_title("2015 Neighborhood Clusters", fontsize=14, fontweight="bold", pad=15)
+    ax1.set_xlabel("Cluster Group", fontsize=12)
+    ax1.set_ylabel("Number of Neighborhoods", fontsize=12)
     ax1.set_xticks(range(4))
-    ax1.set_xticklabels([f'Cluster {i}' for i in range(4)])
-    ax1.grid(axis='y', alpha=0.3, linestyle='--')
+    ax1.set_xticklabels([f"Cluster {i}" for i in range(4)])
+    ax1.grid(axis="y", alpha=0.3, linestyle="--")
 
     # 2025 cluster distribution
     cluster_counts_25 = labels_25.value_counts().sort_index()
-    ax2.bar(cluster_counts_25.index, cluster_counts_25.values,
-            color=cluster_colors, edgecolor='black', linewidth=1.5, alpha=0.8)
-    ax2.set_title('2025 Neighborhood Clusters', fontsize=14, fontweight='bold', pad=15)
-    ax2.set_xlabel('Cluster Group', fontsize=12)
-    ax2.set_ylabel('Number of Neighborhoods', fontsize=12)
+    ax2.bar(
+        cluster_counts_25.index,
+        cluster_counts_25.values,
+        color=cluster_colors,
+        edgecolor="black",
+        linewidth=1.5,
+        alpha=0.8,
+    )
+    ax2.set_title("2025 Neighborhood Clusters", fontsize=14, fontweight="bold", pad=15)
+    ax2.set_xlabel("Cluster Group", fontsize=12)
+    ax2.set_ylabel("Number of Neighborhoods", fontsize=12)
     ax2.set_xticks(range(4))
-    ax2.set_xticklabels([f'Cluster {i}' for i in range(4)])
-    ax2.grid(axis='y', alpha=0.3, linestyle='--')
+    ax2.set_xticklabels([f"Cluster {i}" for i in range(4)])
+    ax2.grid(axis="y", alpha=0.3, linestyle="--")
 
-    plt.suptitle('How Neighborhoods Group Together by Request Patterns',
-                 fontsize=18, fontweight='bold', y=0.98)
+    plt.suptitle(
+        "How Neighborhoods Group Together by Request Patterns",
+        fontsize=18,
+        fontweight="bold",
+        y=0.98,
+    )
 
     plt.tight_layout(rect=[0, 0, 1, 0.93])
     plt.show()
