@@ -102,5 +102,5 @@ class Year:
         return {
             "describe": describe,
             "monthly": monthly_counts,
-            "val_counts": unique_value_counts,
+            "counts": unique_value_counts,
         }
