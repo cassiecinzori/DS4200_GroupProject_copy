@@ -1,6 +1,6 @@
 import pandas as pd
 import geopandas as gpd
-import folium
+
 from dash import Dash, html, dcc
 import dash_leaflet as dl
 from typing import Optional
@@ -12,6 +12,9 @@ class Year:
         self.gpd = None
         self.start_box = (42.3601, -71.0589)
         self.cache = None  # store subsets in cache - full data stays intact in data
+        self.neighborhood_shapes = gpd.read_file(
+            "data/neighborhood_shapes/Boston_Neighborhood_Boundaries.shp"
+        )
 
     def make_points(self) -> None:
         self.data["geometry"] = gpd.points_from_xy(
@@ -21,16 +24,6 @@ class Year:
         self.data = self.data.dropna(subset=["geometry"])
         self.data = self.data[~self.data.geometry.is_empty]
         self.cache = self.data  # by default assign full data to cache
-
-    def serve_cache(self) -> folium.Map:
-        map = folium.Map(location=self.start_box, zoom_start=10)
-
-        for _, row in self.cache.iterrows():
-            folium.Marker(
-                [row["geometry"].y, row["geometry"].x],
-                popup=row[["case_title", "subject", "location"]],
-            ).add_to(map)
-        return map
 
     def get_subset(
         self, target_col: str, target_vals: list, cache: Optional[bool] = False
