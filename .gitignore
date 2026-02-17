@@ -4,3 +4,5 @@ data/311_2025.csv
 venv/
 __pycache__/
 *.pyc
+output/
+.DS_Store
