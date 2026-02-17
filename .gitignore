@@ -1,5 +1,8 @@
 data/311_2015.csv
 data/311_2025.csv
 .venv/
-venv/.DS_Store
+venv/
+__pycache__/
+*.pyc
 output/
+.DS_Store
