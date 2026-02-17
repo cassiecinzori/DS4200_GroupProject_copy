@@ -98,22 +98,11 @@ class SignatureAnalyzer:
         >>> sigs.loc["Dorchester"].sum()   # always 1.0
         1.0
         """
-        # Step 1: cross-tabulate  s(a, t)
-        # -------------------------------------------------
-        # This gives us a matrix where rows = areas, cols = types,
-        # and values = raw counts.
-        ct = pd.crosstab(df[self.area_col], df[self.type_col])
 
-        # Step 2: filter sparse areas
-        # -------------------------------------------------
+        ct = pd.crosstab(df[self.area_col], df[self.type_col])
         totals = ct.sum(axis=1)
         ct = ct.loc[totals >= min_requests]
-
-        # Step 3: normalise rows to relative frequencies   s(a,t) / s(a)
-        # -------------------------------------------------
         signatures = ct.div(ct.sum(axis=1), axis=0)
-
-        # Store the type ordering so we can align a second year's data
         self.type_index_ = signatures.columns
 
         return signatures
@@ -141,15 +130,9 @@ class SignatureAnalyzer:
         all_types = sorted(set(sig_a.columns) | set(sig_b.columns))
         a = sig_a.reindex(columns=all_types, fill_value=0.0)
         b = sig_b.reindex(columns=all_types, fill_value=0.0)
-
-        # Re-normalise rows in case new zero-columns broke the sum
         a = a.div(a.sum(axis=1), axis=0).fillna(0)
         b = b.div(b.sum(axis=1), axis=0).fillna(0)
         return a, b
-
-    # ------------------------------------------------------------------
-    #  Clustering
-    # ------------------------------------------------------------------
 
     def cluster(
         self,
@@ -186,15 +169,10 @@ class SignatureAnalyzer:
         labels = pd.Series(km.labels_, index=signatures.index, name="cluster")
         return labels, km.cluster_centers_
 
-    # ------------------------------------------------------------------
-    #  Year-over-year comparison
-    # ------------------------------------------------------------------
-
     def compare_signatures(
         self,
         sig_old: pd.DataFrame,
         sig_new: pd.DataFrame,
-        metric: str = "cosine",
     ) -> pd.DataFrame:
         """
         Measure how each area's signature vector changed between two years.
@@ -203,28 +181,24 @@ class SignatureAnalyzer:
         ----------
         sig_old, sig_new : pd.DataFrame
             Signature matrices (must share index for overlapping areas).
-        metric : str
-            "cosine"  — cosine distance  (0 = identical, 1 = orthogonal)
-            "jsd"     — Jensen-Shannon divergence (information-theoretic)
-            "l2"      — Euclidean distance
 
         Returns
         -------
         pd.DataFrame with columns:
             area          — neighborhood name
-            distance      — chosen distance metric
+            distance      — cosine distance between old and new signature vectors
             top_increase  — type with largest positive frequency shift
             top_decrease  — type with largest negative frequency shift
 
         Example
         -------
-        >>> drift = sa.compare_signatures(sigs_15, sigs_25, metric="cosine")
+        >>> drift = sa.compare_signatures(sigs_15, sigs_25)
         >>> drift.sort_values("distance", ascending=False).head()
         """
         old_aligned, new_aligned = self.align_signatures(sig_old, sig_new)
-
-        # Only compare areas present in both years
-        common = old_aligned.index.intersection(new_aligned.index)
+        common = old_aligned.index.intersection(
+            new_aligned.index
+        )  # only displays overlapping columns
         old_aligned = old_aligned.loc[common]
         new_aligned = new_aligned.loc[common]
 
@@ -233,16 +207,9 @@ class SignatureAnalyzer:
             v_old = old_aligned.loc[area].values
             v_new = new_aligned.loc[area].values
             diff = v_new - v_old
-
-            if metric == "cosine":
-                d = cosine(v_old, v_new)
-            elif metric == "jsd":
-                d = jensenshannon(v_old, v_new)
-            elif metric == "l2":
-                d = np.linalg.norm(diff)
-            else:
-                raise ValueError(f"Unknown metric: {metric}")
-
+            d = cosine(
+                v_old, v_new
+            )  # using cosine distance as default; can add other metrics if desired
             cols = old_aligned.columns
             records.append(
                 {
@@ -256,10 +223,6 @@ class SignatureAnalyzer:
             )
 
         return pd.DataFrame(records).sort_values("distance", ascending=False)
-
-    # ------------------------------------------------------------------
-    #  Convenience: top types per cluster
-    # ------------------------------------------------------------------
 
     def cluster_profiles(
         self, signatures: pd.DataFrame, labels: pd.Series, top_n: int = 5
@@ -283,9 +246,6 @@ class SignatureAnalyzer:
         return profiles
 
 
-# ======================================================================
-#  Quick demo / integration with Year class
-# ======================================================================
 if __name__ == "__main__":
     from api311 import Year
 
@@ -325,5 +285,5 @@ if __name__ == "__main__":
 
     # ---- Compare years ----
     print("\n=== Signature Drift: 2015 → 2025 (cosine distance) ===")
-    drift = sa.compare_signatures(sigs_15, sigs_25, metric="cosine")
+    drift = sa.compare_signatures(sigs_15, sigs_25)
     print(drift.to_string(index=False))
