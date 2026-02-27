@@ -4,6 +4,7 @@ import geopandas as gpd
 from dash import Dash, html, dcc
 import dash_leaflet as dl
 from typing import Optional
+from signatures import SignatureAnalyzer
 
 
 class Year:
@@ -15,7 +16,8 @@ class Year:
         self.neighborhood_shapes = gpd.read_file(
             "data/neighborhood_shapes/Boston_Neighborhood_Boundaries.shp"
         )
-
+        
+:
     def make_points(self) -> None:
         self.data["geometry"] = gpd.points_from_xy(
             self.data.longitude, self.data.latitude
@@ -87,13 +89,33 @@ class Year:
                 .fillna(0)
             )
 
-    def summarize(self, col: str, full: Optional[bool] = True) -> dict:
-        describe = self.data[col].describe()
-        monthly_counts = self._get_monthly_counts(col, full=full)
-        unique_value_counts = self.data[col].value_counts()
+    def _get_signatures(
+        self,
+        area_col: str = "neighborhood",
+        type_col: str = "type",
+        full: Optional[bool] = True,
+    ) -> pd.DataFrame:
+        if full:
+            data = self.data
+        else:
+            data = self.cache
+
+        sa = SignatureAnalyzer(area_col=area_col, type_col=type_col)
+        sigs = sa.build_signatures(data, min_requests=30)
+        return sigs
+
+    def summarize(
+        self, category_col: str, target_col: str, full: Optional[bool] = True
+    ) -> dict:
+        describe = self.data[target_col].describe()
+        monthly_counts = self._get_monthly_counts(target_col, full=full)
+        unique_value_counts = self.data[target_col].value_counts()
+        signatures = self._get_signatures(category_col, target_col, full=full)
 
         return {
             "describe": describe,
             "monthly": monthly_counts,
             "counts": unique_value_counts,
+            "signatures": signatures,
         }
+
