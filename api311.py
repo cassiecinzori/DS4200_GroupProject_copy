@@ -16,8 +16,7 @@ class Year:
         self.neighborhood_shapes = gpd.read_file(
             "data/neighborhood_shapes/Boston_Neighborhood_Boundaries.shp"
         )
-        
-:
+
     def make_points(self) -> None:
         self.data["geometry"] = gpd.points_from_xy(
             self.data.longitude, self.data.latitude
@@ -52,13 +51,15 @@ class Year:
             source = self.data
         else:
             source = self.cache
-
-        source["open_dt"] = pd.to_datetime(source["open_dt"])
-        source["closed_dt"] = pd.to_datetime(source["closed_dt"])
-        source["open_month_name"] = source["open_dt"].dt.month_name()
-        source["open_month_num"] = source["open_dt"].dt.month
-        source["closed_month_name"] = source["closed_dt"].dt.month_name()
-        source["closed_month_num"] = source["closed_dt"].dt.month
+        if source is not None:
+            source["open_dt"] = pd.to_datetime(source["open_dt"])
+            source["closed_dt"] = pd.to_datetime(source["closed_dt"])
+            source["open_month_name"] = source["open_dt"].dt.month_name()
+            source["open_month_num"] = source["open_dt"].dt.month
+            source["closed_month_name"] = source["closed_dt"].dt.month_name()
+            source["closed_month_num"] = source["closed_dt"].dt.month
+        else:
+            raise ValueError("No data available to calculate monthly counts.")
 
         if col in ("open_dt", "closed_dt"):
             monthly_groups = (
@@ -75,6 +76,7 @@ class Year:
         else:
             import calendar
 
+            month_order = []
             """For each unique val in col, make months columns with counts of requests per month as corresponding row values"""
             monthly_requests = {}
             for month in source["closed_month_name"].unique():
@@ -82,6 +84,7 @@ class Year:
                     source[source["closed_month_name"] == month].groupby(col).size()
                 )
                 month_order = list(calendar.month_name)[1:]
+
             return (
                 pd.DataFrame(monthly_requests)
                 .reindex(columns=month_order)
@@ -96,13 +99,15 @@ class Year:
         full: Optional[bool] = True,
     ) -> pd.DataFrame:
         if full:
-            data = self.data
+            source = self.data
         else:
-            data = self.cache
-
-        sa = SignatureAnalyzer(area_col=area_col, type_col=type_col)
-        sigs = sa.build_signatures(data, min_requests=30)
-        return sigs
+            source = self.cache
+        if source is not None:
+            sa = SignatureAnalyzer(area_col=area_col, type_col=type_col)
+            sigs = sa.build_signatures(source, min_requests=30)
+            return sigs
+        else:
+            raise ValueError("No data available to calculate signatures.")
 
     def summarize(
         self, category_col: str, target_col: str, full: Optional[bool] = True
@@ -118,4 +123,3 @@ class Year:
             "counts": unique_value_counts,
             "signatures": signatures,
         }
-
