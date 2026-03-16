@@ -333,78 +333,88 @@
         </section>
 
         <section id="visualizations">
-            <h2>Visualizations</h2>
+        <h2>Visualizations</h2>
 
-            <div class="visualization">
-                <h3>Figure 1: Seasonal Patterns in 311 Requests</h3>
-                <img src="figures/monthly_heatmap.png" alt="Monthly heatmap visualization">
-                <p>
-                    The heatmap displays monthly request volumes by type for 2015 and 2025, revealing pronounced seasonal patterns. 
-                    Snow removal requests demonstrate expected winter concentration, while infrastructure concerns such as street lighting 
-                    and pothole repairs maintain relatively consistent year-round frequency. Temporal comparison identifies request types 
-                    experiencing volume increases or decreases over the study period.
-                </p>
-            </div>
+        <div class="visualization">
+            <h3>Figure 1: Seasonal Patterns in 311 Requests</h3>
+            <img src="figures/monthly_heatmap.png" alt="Monthly heatmap visualization">
+            <p>
+                The heatmap displays monthly request volumes by type for 2015 and 2025, revealing pronounced seasonal patterns.
+                Snow removal requests demonstrate expected winter concentration, while infrastructure concerns such as street lighting
+                and pothole repairs maintain relatively consistent year-round frequency. Temporal comparison identifies request types
+                experiencing volume increases or decreases over the study period.
+            </p>
+        </div>
 
-            <div class="visualization">
-                <h3>Figure 2: Neighborhood Request Composition Analysis</h3>
-                <img src="figures/composition_bars.html" alt="Neighborhood composition bar charts">
-                <p>
-                    Horizontal bar charts compare the top five request types for Boston's six highest-volume neighborhoods. Blue bars 
-                    represent 2015 data; orange bars represent 2025. The visualization demonstrates heterogeneity in neighborhood priorities 
-                    and documents compositional shifts occurring over the decade-long study period.
-                </p>
-            </div>
+        <div class="visualization">
+            <h3>Figure 2: Neighborhood Request Composition Analysis</h3>
+            <iframe src="figures/composition_bars.html"
+                    width="100%"
+                    height="600"
+                    frameborder="0"
+                    style="border: 1px solid #dee2e6;">
+            </iframe>
+            <p>
+                Horizontal bar charts compare the top five request types for Boston's six highest-volume neighborhoods. Blue bars
+                represent 2015 data; orange bars represent 2025. The visualization demonstrates heterogeneity in neighborhood priorities
+                and documents compositional shifts occurring over the decade-long study period.
+            </p>
+        </div>
 
-            <div class="visualization">
-                <h3>Figure 3: Neighborhood Signature Drift Quantification</h3>
-                <img src="figures/signature_drift.png" alt="Signature drift analysis">
-                <p>
-                    This analysis quantifies change magnitude for each neighborhood using cosine distance between 2015 and 2025 signature 
-                    vectors. Neighborhoods are rank-ordered by drift magnitude. East Boston, South Boston/Waterfront, and South Boston 
-                    exhibit the highest drift values, consistent with these areas' documented rapid development and demographic transitions. 
-                    The median drift threshold (red line) facilitates identification of neighborhoods experiencing above-average transformation.
-                </p>
-            </div>
+        <div class="visualization">
+            <h3>Figure 3: Neighborhood Signature Drift Quantification</h3>
+            <img src="figures/signature_drift.png" alt="Signature drift analysis">
+            <p>
+                This analysis quantifies change magnitude for each neighborhood using cosine distance between 2015 and 2025 signature
+                vectors. Neighborhoods are rank-ordered by drift magnitude. East Boston, South Boston/Waterfront, and South Boston
+                exhibit the highest drift values, consistent with these areas' documented rapid development and demographic transitions.
+                The median drift threshold (red line) facilitates identification of neighborhoods experiencing above-average transformation.
+            </p>
+        </div>
 
-            <div class="visualization">
-                <h3>Figure 4: Cluster Distribution Comparison</h3>
-                <img src="figures/cluster_comparison.html" alt="Cluster comparison visualization">
-                <p>
-                    K-means clustering groups neighborhoods into four distinct profiles based on 311 request signatures. Side-by-side 
-                    comparison documents redistribution of neighborhoods across clusters between 2015 and 2025. Cluster membership transitions 
-                    suggest systematic shifts in service request profiles, potentially reflecting broader patterns of gentrification, 
-                    infrastructure investment allocation, or demographic change.
-                </p>
-            </div>
+        <div class="visualization">
+            <h3>Figure 4: Cluster Distribution Comparison</h3>
+            <iframe src="figures/cluster_comparison.html"
+                    width="100%"
+                    height="600"
+                    frameborder="0"
+                    style="border: 1px solid #dee2e6;">
+            </iframe>
+            <p>
+                K-means clustering groups neighborhoods into four distinct profiles based on 311 request signatures. Side-by-side
+                comparison documents redistribution of neighborhoods across clusters between 2015 and 2025. Cluster membership transitions
+                suggest systematic shifts in service request profiles, potentially reflecting broader patterns of gentrification,
+                infrastructure investment allocation, or demographic change.
+            </p>
+        </div>
 
-            <div class="visualization">
-                <h3>Figure 5: Interactive Neighborhood Request Pattern Comparison</h3>
-                <iframe src="interactive_neighborhood_comparison.html" 
-                        width="100%" 
-                        height="750" 
-                        frameborder="0"
-                        style="border: 1px solid #dee2e6;">
-                </iframe>
-                <p>
-                    This interactive visualization allows exploration of request patterns for individual neighborhoods. 
-                    Use the dropdown to select any Boston neighborhood and click the legend to toggle between 2015 
-                    and 2025 data. Request types are displayed alphabetically with grouped bars showing year-over-year comparison.
-                    This Altair-based visualization enables detailed examination of how specific neighborhoods' complaint profiles 
-                    evolved over the study period.
-                </p>
-            </div>
+        <div class="visualization">
+            <h3>Figure 5: Interactive Neighborhood Request Pattern Comparison</h3>
+            <iframe src="interactive_neighborhood_comparison.html"
+                    width="100%"
+                    height="750"
+                    frameborder="0"
+                    style="border: 1px solid #dee2e6;">
+            </iframe>
+            <p>
+                This interactive visualization allows exploration of request patterns for individual neighborhoods.
+                Use the dropdown to select any Boston neighborhood and click the legend to toggle between 2015
+                and 2025 data. Request types are displayed alphabetically with grouped bars showing year-over-year comparison.
+                This Altair-based visualization enables detailed examination of how specific neighborhoods' complaint profiles
+                evolved over the study period.
+            </p>
+        </div>
 
-            <div class="visualization">
-                <h3>Figure 6: Interactive Geographic Visualization</h3>
-                <p>
-                    <strong>Interactive Component:</strong> Side-by-side choropleth maps enable spatial comparison of 2015 and 2025 request 
-                    distributions with dynamic filtering by neighborhood and request type. Implementation utilizes Dash and Folium frameworks 
-                    with marker clustering for performance optimization.
-                </p>
-                <p>Execute <code>map_app.py</code> to access the interactive visualization interface.</p>
-            </div>
-        </section>
+        <div class="visualization">
+            <h3>Figure 6: Interactive Geographic Visualization</h3>
+            <p>
+                <strong>Interactive Component:</strong> Side-by-side choropleth maps enable spatial comparison of 2015 and 2025 request
+                distributions with dynamic filtering by neighborhood and request type. Implementation utilizes Dash and Folium frameworks
+                with marker clustering for performance optimization.
+            </p>
+            <p>Execute <code>map_app.py</code> to access the interactive visualization interface.</p>
+        </div>
+    </section>
 
         <section id="findings">
             <h2>Findings</h2>
