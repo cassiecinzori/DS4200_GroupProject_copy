@@ -211,7 +211,7 @@
 <body>
     <header>
         <h1>Mapping Urban Change Through 311 Service Requests</h1>
-        <p>A Comparative Analysis of Boston Neighborhoods: 2015 vs 2025</p>
+        <p>A Comparative Analysis of Boston Neighborhoods (Signatures) and Census Tracts (ACS Validation): 2015 vs 2025</p>
         <div class="team-members">
             <span>Anthony Campos</span>
             <span>Cassandra Cinzori</span>
@@ -234,6 +234,11 @@
                 different income, education, and demographic profiles. By comparing these "signatures" across a decade, we identify 
                 neighborhoods experiencing significant transformation through gentrification, infrastructure investment, or emerging 
                 distress patterns.
+            </p>
+            <p>
+                We analyze complaint composition at the neighborhood level for interpretability (signatures, clusters, and drift), and we 
+                separately assign each complaint to a census tract to merge ACS socioeconomic indicators (poverty, income, population) for 
+                validation.
             </p>
             <p>
                 The 2015-2025 period represents a transformative decade for Boston, characterized by substantial Seaport District development, 
@@ -283,7 +288,8 @@
                 We integrated American Community Survey (ACS) 5-Year estimates (2019-2023) providing census tract-level data on population, 
                 median household income, and poverty rates. Geographic assignment of 311 requests to census tracts via spatial join enables 
                 validation of request patterns against demographic indicators. This approach follows the methodology established by 
-                Wang et al. (2017) for linking 311 data to socioeconomic context.
+                Wang et al. (2017) for linking 311 data to socioeconomic context. We created a tract-level merged analysis table that is 
+                used for SES validation plots and summary comparisons.
             </p>
         </section>
 
@@ -316,6 +322,13 @@
                 compositional change independent of magnitude, with values approaching 1.0 indicating substantial pattern transformation. 
                 Neighborhoods exhibiting high cosine distance experienced significant shifts in their request type distribution, potentially 
                 reflecting demographic transitions, infrastructure investment patterns, or evolving service needs.
+            </p>
+            
+            <h3>Tract-Level Socioeconomic Validation</h3>
+            <p>
+                Separately, we assign 311 points to census tracts via spatial join and merge tract-level complaint summaries with ACS 
+                poverty, income, and population. This tract-level layer is used for validation through simple association checks on tract 
+                complaint change and per-capita complaint rates, not for defining the neighborhood signatures.
             </p>
         </section>
 
@@ -399,9 +412,20 @@
             <h3>Neighborhood-Level Transformation</h3>
             <p>
                 East Boston, South Boston/Waterfront, and South Boston demonstrate the most substantial signature drift values, indicating 
-                dramatic shifts in request pattern composition. These findings align with documented rapid development and gentrification 
+                dramatic shifts in request pattern composition. These findings are consistent with prior narratives about rapid development 
+                and gentrification 
                 in these areas during the study period. The Seaport District's transformation from industrial zone to high-density mixed-use 
-                development is clearly reflected in evolving complaint patterns.
+                development may be reflected in evolving complaint patterns.
+            </p>
+
+            <h3>Tract-Level Socioeconomic Validation</h3>
+            <p>
+                Using the merged tract analysis table, poverty rate shows a weak positive relationship with tract complaint change 
+                (Pearson <em>r</em> = 0.13), while median household income shows little linear relationship with complaint change 
+                (Pearson <em>r</em> = -0.04). Overall, these tract-level associations are modest. This validation layer suggests that 311 
+                captures some socioeconomic structure, but ACS context is used here as supporting evidence rather than proof of any single 
+                causal explanation. These values come from simple descriptive checks on <code>data/census_tract_ses_2023_with_311.csv</code>, 
+                not from a predictive model.
             </p>
 
             <h3>Request Volume Trajectory</h3>
@@ -423,7 +447,7 @@
             <h3>Cluster Reorganization</h3>
             <p>
                 Redistribution of neighborhoods across cluster assignments between 2015 and 2025 indicates systematic reorganization of 
-                Boston's service request profile landscape. This restructuring likely reflects broader demographic and economic transitions 
+                Boston's service request profile landscape. This restructuring may reflect broader demographic and economic transitions 
                 occurring citywide, with implications for resource allocation and service delivery planning.
             </p>
         </section>
