@@ -36,8 +36,8 @@ def create_monthly_heatmap(year15, year25, save=True):
     print("Creating monthly heatmap...")
 
     # Get monthly summary data
-    summary_15 = year15.summarize("type")
-    summary_25 = year25.summarize("type")
+    summary_15 = year15.summarize("neighborhood", "type")
+    summary_25 = year25.summarize("neighborhood", "type")
 
     monthly_15 = summary_15["monthly"]
     monthly_25 = summary_25["monthly"]
@@ -224,6 +224,9 @@ def create_signature_drift(year15, year25, save=True):
     drift = sa.compare_signatures(sigs_15, sigs_25)
     drift = drift.sort_values("distance", ascending=False).reset_index(drop=True)
 
+    # Drop the last (lowest-drift) neighborhood
+    drift = drift.iloc[:-1]
+
     # Get average request counts for context
     counts_15 = year15.data["neighborhood"].value_counts()
     counts_25 = year25.data["neighborhood"].value_counts()
@@ -235,8 +238,10 @@ def create_signature_drift(year15, year25, save=True):
     # Create figure
     fig, ax = plt.subplots(figsize=(22, 10))
 
-    # Color bars by drift magnitude
-    colors = plt.cm.RdYlGn_r(drift["distance"] / drift["distance"].max())
+    # Color bars using a single Blues colormap
+    colors = plt.cm.Blues(
+        0.3 + 0.7 * (drift["distance"] / drift["distance"].max())
+    )
 
     ax.bar(
         range(len(drift)),
@@ -292,7 +297,6 @@ def create_signature_drift(year15, year25, save=True):
 
     plt.subplots_adjust(bottom=0.30, top=0.92)
     plt.tight_layout()
-
     plt.show()
 
     print(drift.tail())
