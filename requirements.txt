@@ -7,4 +7,5 @@ matplotlib
 seaborn
 altair
 vl-convert-python
-plotly
+scipy
+scikit-learn

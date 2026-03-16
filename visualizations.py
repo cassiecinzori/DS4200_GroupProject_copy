@@ -1,6 +1,12 @@
 """
-visualizations.py - Generate all visualizations for DS4200 project
+visualizations.py - Generate all visualizations for DS4200 project and output to figures/
 Boston 311 Service Request Analysis: 2015 vs 2025
+
+This module contains functions to create the following visualizations:
+1. Monthly heatmap comparison of request types by season (Matplotlib/Seaborn)
+2. Neighborhood request composition over time (Altair)
+3. Signature drift analysis (Matplotlib/Seaborn)
+4. Cluster comparison analysis (Altair)
 """
 
 from api311 import Year
@@ -14,6 +20,8 @@ import os
 from typing import Tuple, Optional, List, Dict
 from matplotlib.figure import Figure
 import altair as alt
+from scipy.spatial.distance import jensenshannon
+from sklearn.cluster import AgglomerativeClustering
 
 sns.set_style("whitegrid")
 plt.rcParams["figure.facecolor"] = "white"
@@ -46,6 +54,8 @@ def clean_request_type_name(name: str) -> str:
 
 
 # == Visualization Functions ==
+
+""" Visualization 1: Monthly Heatmap Comparison of Request Types by Season"""
 
 
 def create_monthly_heatmap(
@@ -257,8 +267,10 @@ def create_monthly_heatmap(
 
     if save:
         save_figure(fig, "monthly_heatmap.png")
-    plt.show()
     return fig
+
+
+""" Visualization 2: Neighborhood Request Composition Analysis"""
 
 
 def create_composition_bars(
@@ -437,11 +449,7 @@ def create_composition_bars(
     return combined_chart
 
 
-"""
-Nieghborhood signature drift Quanification analysis 3:
-
-
-"""
+""" Visualization 3: Signature Drift Analysis"""
 
 
 def create_signature_drift(
@@ -534,85 +542,357 @@ def create_signature_drift(
     plt.tight_layout()
     if save:
         save_figure(fig, "signature_drift.png")
-    plt.show()
 
     print(drift.tail())
 
     return fig, drift
 
 
-"""
-Cluster distribution comparison 4:
-"""
+""" Visualization 4: Cluster Comparison Analysis"""
 
 
 def create_cluster_comparison(
-    year15: Year, year25: Year, save: bool = True
-) -> Tuple[Figure, pd.Series, pd.Series]:
-    """Cluster comparison"""
+    year15: Year,
+    year25: Year,
+    k: int = 3,
+    top_n_types: int = 10,
+    save: bool = True,
+) -> Tuple[alt.VConcatChart, pd.DataFrame]:
+    """
+    Cluster profile + membership comparison visualization.
+
+    1. Build aligned signatures for both years.
+    2. Average each neighborhood's 2015 and 2025 vectors.
+    3. Compute pairwise JSD distance matrix, cluster with agglomerative
+       clustering (average linkage) to define k cluster identities.
+    4. Derive centroids as mean signature per cluster.
+    5. For each cluster, show top N request types by relative frequency.
+    6. Independently assign each (neighborhood, year) pair to nearest
+       centroid via JSD.
+    7. Membership panel: stable neighborhoods shown once, shifted
+       neighborhoods shown with year annotation in both clusters.
+
+    Args:
+        year15: Year object for 2015 data
+        year25: Year object for 2025 data
+        k: number of clusters
+        top_n_types: number of top request types per cluster
+        save: whether to save as HTML
+
+    Returns:
+        (chart, assignment_df)
+    """
     print("Creating cluster analysis...")
 
     sa = SignatureAnalyzer(area_col="neighborhood", type_col="type")
 
-    # Build signatures and apply k-means clustering
+    # Build and align signatures
     sigs_15 = sa.build_signatures(year15.data, min_requests=30)
     sigs_25 = sa.build_signatures(year25.data, min_requests=30)
+    sigs_15_aligned, sigs_25_aligned = sa.align_signatures(sigs_15, sigs_25)
 
-    labels_15, _ = sa.cluster(sigs_15, k=4)
-    labels_25, _ = sa.cluster(sigs_25, k=4)
+    # Common neighborhoods only — drop blanks/whitespace
+    common_areas = sorted(sigs_15_aligned.index.intersection(sigs_25_aligned.index))
+    common_areas = [a for a in common_areas if a and a.strip()]
+    sigs_15_common = sigs_15_aligned.loc[common_areas]
+    sigs_25_common = sigs_25_aligned.loc[common_areas]
 
-    # Create side-by-side comparison
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
+    # Truncate long neighborhood names for display
+    SHORT_NAMES = {
+        "South Boston / South Boston Waterfront": "S. Boston / Waterfront",
+        "Fenway / Kenmore / Audubon Circle / Longwood": "Fenway / Kenmore",
+        "Downtown / Financial District": "Downtown / Fin. District",
+    }
 
-    cluster_colors = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12"]
+    def shorten_hood(name):
+        return SHORT_NAMES.get(name, name)
 
-    # 2015 cluster distribution
-    cluster_counts_15 = labels_15.value_counts().sort_index()
-    ax1.bar(
-        cluster_counts_15.index,
-        cluster_counts_15.values,
-        color=cluster_colors,
-        edgecolor="black",
-        linewidth=1.5,
-        alpha=0.8,
-    )
-    ax1.set_title("2015 Neighborhood Clusters", fontsize=14, fontweight="bold", pad=15)
-    ax1.set_xlabel("Cluster Group", fontsize=12)
-    ax1.set_ylabel("Number of Neighborhoods", fontsize=12)
-    ax1.set_xticks(range(4))
-    ax1.set_xticklabels([f"Cluster {i}" for i in range(4)])
-    ax1.grid(axis="y", alpha=0.3, linestyle="--")
+    # ── Step 1: Average signatures and cluster with JSD + agglomerative ──
+    sigs_avg = (sigs_15_common + sigs_25_common) / 2.0
+    sigs_avg = sigs_avg.div(sigs_avg.sum(axis=1), axis=0)
 
-    # 2025 cluster distribution
-    cluster_counts_25 = labels_25.value_counts().sort_index()
-    ax2.bar(
-        cluster_counts_25.index,
-        cluster_counts_25.values,
-        color=cluster_colors,
-        edgecolor="black",
-        linewidth=1.5,
-        alpha=0.8,
-    )
-    ax2.set_title("2025 Neighborhood Clusters", fontsize=14, fontweight="bold", pad=15)
-    ax2.set_xlabel("Cluster Group", fontsize=12)
-    ax2.set_ylabel("Number of Neighborhoods", fontsize=12)
-    ax2.set_xticks(range(4))
-    ax2.set_xticklabels([f"Cluster {i}" for i in range(4)])
-    ax2.grid(axis="y", alpha=0.3, linestyle="--")
+    areas = sigs_avg.index.tolist()
+    n = len(areas)
 
-    plt.suptitle(
-        "How Neighborhoods Group Together by Request Patterns",
-        fontsize=18,
-        fontweight="bold",
-        y=0.98,
+    # Pairwise JSD distance matrix
+    dist_matrix = np.zeros((n, n))
+    for i in range(n):
+        for j in range(i + 1, n):
+            d = jensenshannon(sigs_avg.iloc[i].values, sigs_avg.iloc[j].values)
+            dist_matrix[i, j] = d
+            dist_matrix[j, i] = d
+
+    agg = AgglomerativeClustering(n_clusters=k, metric="precomputed", linkage="average")
+    cluster_labels = agg.fit_predict(dist_matrix)
+    labels = pd.Series(cluster_labels, index=areas, name="cluster")
+
+    # Compute centroids as mean signature per cluster
+    type_columns = sigs_avg.columns
+    centroids = np.array(
+        [sigs_avg.loc[labels[labels == cid].index].mean().values for cid in range(k)]
     )
 
-    plt.tight_layout(rect=(0, 0, 1, 0.93))
+    # ── Step 2: Build cluster profile from centroids ──
+    profile_rows = []
+    for cid in range(k):
+        centroid = pd.Series(centroids[cid], index=type_columns)
+        top = centroid.nlargest(top_n_types)
+        for req_type, rf in top.items():
+            profile_rows.append(
+                {
+                    "cluster": int(cid),
+                    "type": clean_request_type_name(req_type),
+                    "rf": rf,
+                }
+            )
+    profile_df = pd.DataFrame(profile_rows)
+
+    # ── Step 3: Assign each (neighborhood, year) via JSD to nearest centroid ──
+    def assign_to_cluster(sig_vector, centroids_arr):
+        v = np.clip(sig_vector, 0, None)
+        if v.sum() > 0:
+            v = v / v.sum()
+        distances = [jensenshannon(v, c) for c in centroids_arr]
+        return int(np.argmin(distances))
+
+    assignments = []
+    for hood in common_areas:
+        c15 = assign_to_cluster(sigs_15_common.loc[hood].values, centroids)
+        c25 = assign_to_cluster(sigs_25_common.loc[hood].values, centroids)
+        assignments.append(
+            {
+                "neighborhood": hood,
+                "cluster_2015": c15,
+                "cluster_2025": c25,
+                "shifted": c15 != c25,
+            }
+        )
+    assignment_df = pd.DataFrame(assignments)
+
+    # ── Step 4: Build membership display data ──
+    mem_rows = []
+    for _, row in assignment_df.iterrows():
+        hood = row["neighborhood"]
+        short = shorten_hood(hood)
+        c15 = row["cluster_2015"]
+        c25 = row["cluster_2025"]
+
+        if not row["shifted"]:
+            mem_rows.append(
+                {
+                    "cluster": f"Cluster {c15}",
+                    "cluster_id": c15,
+                    "label": short,
+                    "sort_key": hood.lower(),
+                    "shifted": False,
+                }
+            )
+        else:
+            mem_rows.append(
+                {
+                    "cluster": f"Cluster {c15}",
+                    "cluster_id": c15,
+                    "label": f"{short} (2015)",
+                    "sort_key": hood.lower(),
+                    "shifted": True,
+                }
+            )
+            mem_rows.append(
+                {
+                    "cluster": f"Cluster {c25}",
+                    "cluster_id": c25,
+                    "label": f"{short} (2025)",
+                    "sort_key": hood.lower(),
+                    "shifted": True,
+                }
+            )
+    mem_df = pd.DataFrame(mem_rows)
+    mem_df = mem_df.sort_values(["cluster_id", "sort_key"]).reset_index(drop=True)
+    label_order = mem_df["label"].tolist()
+
+    # ── Step 5: Summary stats ──
+    n_shifted = int(assignment_df["shifted"].sum())
+    n_stable = len(assignment_df) - n_shifted
+
+    def cluster_subtitle(cid):
+        members = mem_df[mem_df["cluster_id"] == cid]
+        stable = members[~members["shifted"]]["label"].tolist()
+        shifted = members[members["shifted"]]["label"].tolist()
+        parts = []
+        if stable:
+            preview = ", ".join(stable[:3])
+            more = f" +{len(stable) - 3}" if len(stable) > 3 else ""
+            parts.append(f"{len(stable)} stable: {preview}{more}")
+        if shifted:
+            parts.append(f"{len(shifted)} shifted")
+        return " · ".join(parts) if parts else "No neighborhoods (centroid only)"
+
+    # ── Step 6: Build Altair charts ──
+    all_clusters = sorted(profile_df["cluster"].unique())
+    CLUSTER_COLORS = ["#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854"]
+
+    cluster_charts = []
+    for cid in all_clusters:
+        c_data = profile_df[profile_df["cluster"] == cid].copy()
+        type_order = c_data.sort_values("rf", ascending=False)["type"].tolist()
+
+        chart = (
+            alt.Chart(c_data)
+            .mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3)
+            .encode(
+                x=alt.X(
+                    "type:N",
+                    sort=type_order,
+                    title=None,
+                    axis=alt.Axis(labelAngle=-35, labelLimit=150, labelFontSize=11),
+                ),
+                y=alt.Y(
+                    "rf:Q",
+                    title="Relative Frequency",
+                    axis=alt.Axis(format=".0%", labelFontSize=11),
+                ),
+                color=alt.value(CLUSTER_COLORS[cid % len(CLUSTER_COLORS)]),
+                tooltip=[
+                    alt.Tooltip("type:N", title="Request Type"),
+                    alt.Tooltip("rf:Q", title="Relative Freq", format=".2%"),
+                ],
+            )
+            .properties(
+                width=340,
+                height=260,
+                title=alt.Title(
+                    f"Cluster {cid}",
+                    subtitle=cluster_subtitle(cid),
+                    subtitleFontSize=10,
+                    subtitleColor="#666",
+                    fontSize=14,
+                    anchor="start",
+                ),
+            )
+        )
+        cluster_charts.append(chart)
+
+    # Membership panel
+    stable_points = (
+        alt.Chart(mem_df[~mem_df["shifted"]])
+        .mark_point(size=180, filled=True, opacity=0.9, shape="circle")
+        .encode(
+            y=alt.Y(
+                "label:N",
+                sort=label_order,
+                title=None,
+                axis=alt.Axis(labelFontSize=11, labelLimit=220),
+            ),
+            x=alt.X(
+                "cluster:N",
+                title=None,
+                axis=alt.Axis(labelFontSize=12, orient="top", labelAngle=0),
+            ),
+            color=alt.Color(
+                "cluster:N",
+                title="Cluster",
+                scale=alt.Scale(
+                    domain=[f"Cluster {c}" for c in all_clusters],
+                    range=[
+                        CLUSTER_COLORS[c % len(CLUSTER_COLORS)] for c in all_clusters
+                    ],
+                ),
+                legend=None,
+            ),
+            tooltip=[
+                alt.Tooltip("label:N", title="Neighborhood"),
+                alt.Tooltip("cluster:N", title="Cluster"),
+            ],
+        )
+    )
+
+    shifted_points = (
+        alt.Chart(mem_df[mem_df["shifted"]])
+        .mark_point(size=200, filled=True, opacity=0.9, shape="diamond")
+        .encode(
+            y=alt.Y("label:N", sort=label_order, title=None),
+            x=alt.X("cluster:N", title=None),
+            color=alt.Color(
+                "cluster:N",
+                scale=alt.Scale(
+                    domain=[f"Cluster {c}" for c in all_clusters],
+                    range=[
+                        CLUSTER_COLORS[c % len(CLUSTER_COLORS)] for c in all_clusters
+                    ],
+                ),
+                legend=None,
+            ),
+            tooltip=[
+                alt.Tooltip("label:N", title="Neighborhood"),
+                alt.Tooltip("cluster:N", title="Cluster"),
+            ],
+        )
+    )
+
+    membership_chart = alt.layer(stable_points, shifted_points).properties(
+        width=180,
+        height=max(260, len(label_order) * 18),
+        title=alt.Title(
+            "Cluster Membership",
+            subtitle=[
+                f"{n_stable} stable · {n_shifted} shifted between years",
+                "● stable  ◆ shifted",
+            ],
+            subtitleFontSize=10,
+            subtitleColor="#666",
+            fontSize=14,
+            anchor="start",
+        ),
+    )
+
+    # ── Layout: adaptive grid ──
+    # Make membership panel wider when displayed as its own row
+    membership_chart = membership_chart.properties(width=720)
+
+    if len(cluster_charts) >= 4:
+        # 2x2 cluster grid + membership below as full-width row
+        top_row = alt.hconcat(cluster_charts[0], cluster_charts[1], spacing=40)
+        mid_row = alt.hconcat(cluster_charts[2], cluster_charts[3], spacing=40)
+        combined = alt.vconcat(
+            top_row, mid_row, membership_chart, spacing=40
+        ).resolve_scale(color="independent")
+    elif len(cluster_charts) == 3:
+        top_row = alt.hconcat(cluster_charts[0], cluster_charts[1], spacing=40)
+        mid_row = alt.hconcat(cluster_charts[2], spacing=40)
+        combined = alt.vconcat(
+            top_row, mid_row, membership_chart, spacing=40
+        ).resolve_scale(color="independent")
+    elif len(cluster_charts) == 2:
+        top_row = alt.hconcat(cluster_charts[0], cluster_charts[1], spacing=40)
+        combined = alt.vconcat(top_row, membership_chart, spacing=40).resolve_scale(
+            color="independent"
+        )
+    else:
+        combined = alt.vconcat(
+            cluster_charts[0] if cluster_charts else membership_chart,
+            membership_chart,
+            spacing=40,
+        ).resolve_scale(color="independent")
+
+    combined = combined.properties(
+        title=alt.Title(
+            "How Neighborhoods Group by 311 Request Patterns",
+            subtitle=[
+                "Agglomerative clustering (JSD distance, average linkage) on averaged 2015+2025 signatures",
+                "Neighborhood-year pairs assigned to nearest cluster centroid via Jensen-Shannon divergence",
+            ],
+            anchor="middle",
+            fontSize=18,
+            subtitleFontSize=12,
+            subtitleColor="#666",
+        ),
+    )
+
     if save:
-        save_figure(fig, "cluster_comparison.png")
-    plt.show()
+        combined.save("figures/cluster_comparison.html")
+        print("Saved to figures/cluster_comparison.html")
 
-    return fig, labels_15, labels_25
+    return combined, assignment_df
 
 
 """Visualization 5 in interactive_composition.py"""
@@ -632,14 +912,24 @@ def main():
     print(f"Loaded 2025: {len(year25.data):,} records")
 
     # Generate all visualizations
+    print("\nGenerating visualizations...")
+    print("1. Monthly heatmap comparison...")
     fig = create_monthly_heatmap(year15, year25, top_n=10, save=True)
+    print("2. Neighborhood request composition...")
     fig = create_composition_bars(
         year15, year25, top_n_neighborhoods=10, rf_cutoff=0.02, save=True
     )
-    # fig, drift = create_signature_drift(year15, year25, save=True)
-    # fig, labels15, labels25 = create_cluster_comparison(year15, year25, save=True)
-
+    print("3. Signature drift analysis...")
+    fig, drift = create_signature_drift(year15, year25, save=True)
+    print("4. Cluster comparison analysis...")
+    fig, assignment_df = create_cluster_comparison(
+        year15, year25, k=4, top_n_types=10, save=True
+    )
     print("\nAll visualizations displayed!")
+
+    print("Outputs in figures/ directory (PNG for Matplotlib, HTML for Altair).")
+
+    print("Visualization 5 in `interactive_composition.py`")
 
 
 if __name__ == "__main__":
