@@ -6,17 +6,30 @@ Boston 311 Service Request Analysis: 2015 vs 2025
 from api311 import Year
 from signatures import SignatureAnalyzer
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import seaborn as sns
 import pandas as pd
 import numpy as np
 import os
+from typing import Tuple, Optional, List, Dict
+from matplotlib.figure import Figure
 
 sns.set_style("whitegrid")
 plt.rcParams["figure.facecolor"] = "white"
 plt.rcParams["font.family"] = "sans-serif"
 
+# == Helpers ==
 
-def clean_request_type_name(name):
+
+def save_figure(fig: Figure, filename: str):
+    """Save figure to file"""
+    if not os.path.exists("figures"):
+        os.makedirs("figures")
+    fig.savefig(os.path.join("figures", filename), dpi=300, bbox_inches="tight")
+    print(f"Saved figure: {filename}")
+
+
+def clean_request_type_name(name: str) -> str:
     """Make request type names more readable"""
     replacements = {
         "Missed Trash/Recycling/Yard Waste/Bulk Item": "Missed Trash/Recycling",
@@ -31,7 +44,10 @@ def clean_request_type_name(name):
     return replacements.get(name, name)
 
 
-def create_monthly_heatmap(year15, year25, save=True):
+# == Visualization Functions ==
+
+
+def create_monthly_heatmap(year15: Year, year25: Year, save: bool = True) -> Figure:
     """Monthly request volume heatmap"""
     print("Creating monthly heatmap...")
 
@@ -101,11 +117,13 @@ def create_monthly_heatmap(year15, year25, save=True):
         y=0.98,
     )
     plt.tight_layout()
+    if save:
+        save_figure(fig, "monthly_heatmap.png")
     plt.show()
     return fig
 
 
-def create_composition_bars(year15, year25, save=True):
+def create_composition_bars(year15: Year, year25: Year, save: bool = True) -> Figure:
     """Neighborhood composition comparison (2015 vs 2025) — Horizontal Bars"""
     print("Creating neighborhood composition charts...")
 
@@ -205,13 +223,17 @@ def create_composition_bars(year15, year25, save=True):
         frameon=False,
     )
 
-    plt.tight_layout(rect=[0, 0, 1, 0.92])
+    plt.tight_layout(rect=(0, 0, 1, 0.92))
+    if save:
+        save_figure(fig, "composition_bars.png")
     plt.show()
 
     return fig
 
 
-def create_signature_drift(year15, year25, save=True):
+def create_signature_drift(
+    year15: Year, year25: Year, save: bool = True
+) -> Tuple[Figure, pd.DataFrame]:
     """Signature drift analysis"""
     print("Creating signature drift analysis...")
 
@@ -239,7 +261,7 @@ def create_signature_drift(year15, year25, save=True):
     fig, ax = plt.subplots(figsize=(22, 10))
 
     # Color bars using a single Blues colormap
-    colors = plt.cm.Blues(
+    colors = plt.cm.get_cmap("Blues")(
         0.3 + 0.7 * (drift["distance"] / drift["distance"].max())
     )
 
@@ -297,6 +319,8 @@ def create_signature_drift(year15, year25, save=True):
 
     plt.subplots_adjust(bottom=0.30, top=0.92)
     plt.tight_layout()
+    if save:
+        save_figure(fig, "signature_drift.png")
     plt.show()
 
     print(drift.tail())
@@ -304,7 +328,9 @@ def create_signature_drift(year15, year25, save=True):
     return fig, drift
 
 
-def create_cluster_comparison(year15, year25, save=True):
+def create_cluster_comparison(
+    year15: Year, year25: Year, save: bool = True
+) -> Tuple[Figure, pd.Series, pd.Series]:
     """Cluster comparison"""
     print("Creating cluster analysis...")
 
@@ -363,9 +389,15 @@ def create_cluster_comparison(year15, year25, save=True):
         y=0.98,
     )
 
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    plt.tight_layout(rect=(0, 0, 1, 0.93))
+    if save:
+        save_figure(fig, "cluster_comparison.png")
     plt.show()
+
     return fig, labels_15, labels_25
+
+
+# == Main Execution ==
 
 
 def main():
@@ -380,10 +412,10 @@ def main():
     print(f"Loaded 2025: {len(year25.data):,} records")
 
     # Generate all visualizations
-    create_monthly_heatmap(year15, year25)
-    create_composition_bars(year15, year25)
-    create_signature_drift(year15, year25)
-    create_cluster_comparison(year15, year25)
+    fig = create_monthly_heatmap(year15, year25, save=True)
+    fig = create_composition_bars(year15, year25, save=True)
+    fig, drift = create_signature_drift(year15, year25, save=True)
+    fig, labels15, labels25 = create_cluster_comparison(year15, year25, save=True)
 
     print("\nAll visualizations displayed!")
 

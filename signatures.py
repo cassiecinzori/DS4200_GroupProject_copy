@@ -215,8 +215,8 @@ class SignatureAnalyzer:
                 {
                     "area": area,
                     "distance": d,
-                    "top_increase": cols[np.argmax(diff)],
-                    "top_decrease": cols[np.argmin(diff)],
+                    "top_increase": cols[int(np.argmax(diff))],
+                    "top_decrease": cols[int(np.argmin(diff))],
                     "max_increase_val": diff.max(),
                     "max_decrease_val": diff.min(),
                 }
