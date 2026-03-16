@@ -5,3 +5,6 @@ geopandas
 dash-leaflet
 matplotlib
 seaborn
+altair
+vl-convert-python
+plotly

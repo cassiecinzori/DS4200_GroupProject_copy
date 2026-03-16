@@ -13,6 +13,7 @@ import numpy as np
 import os
 from typing import Tuple, Optional, List, Dict
 from matplotlib.figure import Figure
+import altair as alt
 
 sns.set_style("whitegrid")
 plt.rcParams["figure.facecolor"] = "white"
@@ -261,122 +262,179 @@ def create_monthly_heatmap(
 
 
 def create_composition_bars(
-    year15: Year, year25: Year, top_n: int, save: bool = True
-) -> Figure:
+    year15: Year,
+    year25: Year,
+    top_n_neighborhoods: int = 10,
+    rf_cutoff: float = 0.02,
+    save: bool = True,
+) -> alt.HConcatChart:
     """
-    Neighborhood composition bar charts 2:
+    Stacked bar chart showing request type composition per neighborhood.
+    Uses relative frequency. Types below rf_cutoff are dropped entirely.
+    2015 and 2025 placed side by side with a shared legend.
 
+    Args:
+        year15: Year object for 2015 data
+        year25: Year object for 2025 data
+        top_n_neighborhoods: number of top neighborhoods by total volume across both years
+        rf_cutoff: minimum mean relative frequency to include a request type;
+                   types below this threshold are excluded entirely
+        save: whether to save the chart as PNG
 
+    Returns:
+        alt.HConcatChart
     """
-    print("Creating neighborhood composition charts...")
 
-    # Clean blank neighborhoods
-    data15 = year15.data[
-        year15.data["neighborhood"].notna()
-        & (year15.data["neighborhood"].str.strip() != "")
-    ]
-
-    data25 = year25.data[
-        year25.data["neighborhood"].notna()
-        & (year25.data["neighborhood"].str.strip() != "")
-    ]
-
-    if top_n > len(data15["neighborhood"].value_counts()):
-        top_n = len(data15["neighborhood"].value_counts())
-        print(
-            f"Warning: top_n exceeds number of neighborhoods. Using top_n={top_n} instead."
-        )
-
-    top_neighborhoods = data15["neighborhood"].value_counts().head(top_n).index.tolist()
-
-    # Create 2x3 grid of subplots
-    fig, axes = plt.subplots(2, 3, figsize=(20, 12))
-    axes = axes.flatten()
-
-    colors = ["#4C72B0", "#DD8452"]  # Blue for 2015, Orange for 2025
-    bar_height = 0.35
-
-    # Create horizontal bar chart for each neighborhood
-    for idx, hood in enumerate(top_neighborhoods):
-
-        hood_15 = data15[data15["neighborhood"] == hood]
-        hood_25 = data25[data25["neighborhood"] == hood]
-
-        # Get top 5 combined request types across both years
-        combined_counts = (
-            pd.concat([hood_15["type"], hood_25["type"]]).value_counts().head(5)
-        )
-
-        top_types = combined_counts.index.tolist()
-
-        # Count occurrences for each year
-        counts_15 = [(hood_15["type"] == t).sum() for t in top_types]
-        counts_25 = [(hood_25["type"] == t).sum() for t in top_types]
-
-        y_positions = range(len(top_types))
-
-        ax = axes[idx]
-
-        # Plot 2015 bars
-        ax.barh(
-            [y - bar_height / 2 for y in y_positions],
-            counts_15,
-            height=bar_height,
-            color=colors[0],
-            edgecolor="black",
-            linewidth=0.6,
-            label="2015" if idx == 0 else "",
-        )
-
-        # Plot 2025 bars
-        ax.barh(
-            [y + bar_height / 2 for y in y_positions],
-            counts_25,
-            height=bar_height,
-            color=colors[1],
-            edgecolor="black",
-            linewidth=0.6,
-            label="2025" if idx == 0 else "",
-        )
-
-        ax.set_yticks(y_positions)
-        ax.set_yticklabels([clean_request_type_name(t) for t in top_types], fontsize=9)
-
-        ax.set_title(hood, fontsize=13, fontweight="bold", pad=8)
-
-        ax.set_xlabel("Requests", fontsize=10)
-        ax.grid(axis="x", linestyle="--", alpha=0.3)
-
-    # Remove unused subplots if any
-    for i in range(len(top_neighborhoods), 6):
-        fig.delaxes(axes[i])
-
-    # Add shared legend at top
-    handles, labels = axes[0].get_legend_handles_labels()
-
-    plt.suptitle(
-        "How Neighborhood Request Patterns Changed (2015 → 2025)",
-        fontsize=18,
-        fontweight="bold",
-        y=0.95,
+    # Identify top neighborhoods by combined volume across both years
+    combined = pd.concat(
+        [
+            year15.data[["neighborhood"]],
+            year25.data[["neighborhood"]],
+        ]
+    ).dropna()
+    top_neighborhoods = (
+        combined["neighborhood"].value_counts().head(top_n_neighborhoods).index.tolist()
     )
 
-    fig.legend(
-        handles,
-        labels,
-        loc="upper center",
-        bbox_to_anchor=(0.5, 0.92),
-        ncol=2,
-        fontsize=11,
-        frameon=False,
+    def build_rf_frame(year_data: pd.DataFrame, year_label: str) -> pd.DataFrame:
+        """Compute relative frequency of each type within each neighborhood."""
+        df = year_data[["neighborhood", "type"]].dropna()
+        df = df[df["neighborhood"].isin(top_neighborhoods)]
+
+        counts = df.groupby(["neighborhood", "type"]).size().reset_index(name="count")
+        totals = counts.groupby("neighborhood")["count"].transform("sum")
+        counts["rf"] = counts["count"] / totals
+        counts["year"] = year_label
+        return counts
+
+    rf_15 = build_rf_frame(year15.data, "2015")
+    rf_25 = build_rf_frame(year25.data, "2025")
+
+    # Determine which types pass the RF cutoff (mean RF across all neighborhoods, both years)
+    all_rf = pd.concat([rf_15, rf_25])
+    mean_rf_by_type = all_rf.groupby("type")["rf"].mean()
+    passing_types = mean_rf_by_type[mean_rf_by_type >= rf_cutoff].index.tolist()
+
+    # Drop types below cutoff
+    rf_15 = rf_15[rf_15["type"].isin(passing_types)].copy()
+    rf_25 = rf_25[rf_25["type"].isin(passing_types)].copy()
+
+    # Sort neighborhoods by total volume descending
+    neighborhood_order = (
+        pd.concat([rf_15, rf_25])
+        .groupby("neighborhood")["count"]
+        .sum()
+        .sort_values(ascending=False)
+        .index.tolist()
     )
 
-    plt.tight_layout(rect=(0, 0, 1, 0.92))
+    # Sort types by overall mean RF descending
+    type_order = (
+        pd.concat([rf_15, rf_25])
+        .groupby("type")["rf"]
+        .mean()
+        .sort_values(ascending=False)
+        .index.tolist()
+    )
+
+    # Clean type names for display
+    for df in [rf_15, rf_25]:
+        df["type"] = df["type"].map(clean_request_type_name)
+    type_order = [clean_request_type_name(t) for t in type_order]
+
+    def make_chart(df: pd.DataFrame, title: str) -> alt.Chart:
+        n_total = int(df["count"].sum())
+        return (
+            alt.Chart(df)
+            .mark_bar()
+            .encode(
+                x=alt.X(
+                    "neighborhood:N",
+                    sort=neighborhood_order,
+                    title="Neighborhood",
+                    axis=alt.Axis(labelAngle=-45, labelLimit=140),
+                ),
+                y=alt.Y(
+                    "rf:Q",
+                    title="Relative Frequency",
+                    stack="zero",
+                    axis=alt.Axis(format=".0%"),
+                ),
+                color=alt.Color(
+                    "type:N",
+                    sort=type_order,
+                    title="Request Type",
+                    scale=alt.Scale(scheme="tableau20"),
+                    legend=None,
+                ),
+                tooltip=[
+                    alt.Tooltip("neighborhood:N", title="Neighborhood"),
+                    alt.Tooltip("type:N", title="Request Type"),
+                    alt.Tooltip("rf:Q", title="Relative Freq", format=".2%"),
+                    alt.Tooltip("count:Q", title="Count"),
+                ],
+            )
+            .properties(
+                title=alt.Title(title, subtitle=f"n = {n_total:,}"),
+                width=380,
+                height=420,
+            )
+        )
+
+    chart_15 = make_chart(rf_15, "2015")
+    chart_25 = make_chart(rf_25, "2025")
+
+    # Standalone shared legend (rendered as invisible chart with visible legend)
+    legend = (
+        alt.Chart(pd.concat([rf_15, rf_25]))
+        .mark_point(opacity=0)
+        .encode(
+            color=alt.Color(
+                "type:N",
+                sort=type_order,
+                title="Request Type",
+                scale=alt.Scale(scheme="tableau20"),
+                legend=alt.Legend(
+                    orient="none",
+                    legendX=0,
+                    legendY=0,
+                    direction="vertical",
+                    titleFontSize=15,
+                    titleFontWeight="bold",
+                    labelFontSize=13,
+                    symbolSize=250,
+                    symbolStrokeWidth=0,
+                    labelLimit=300,
+                    titlePadding=12,
+                    padding=20,
+                    columns=1,
+                    rowPadding=6,
+                ),
+            ),
+        )
+        .properties(width=0, height=0)
+    )
+
+    combined_chart = (
+        alt.hconcat(chart_15, chart_25, legend, spacing=30)
+        .resolve_scale(color="shared")
+        .properties(
+            title=alt.Title(
+                "Request Type Composition by Neighborhood",
+                subtitle=f"Types with mean relative frequency ≥ {rf_cutoff:.0%} · Neighborhoods ordered by total request volume",
+                anchor="middle",
+                fontSize=18,
+                subtitleFontSize=12,
+                subtitleColor="#666",
+            )
+        )
+    )
+
     if save:
-        save_figure(fig, "composition_bars.png")
-    plt.show()
+        combined_chart.save("figures/composition_bars.html")
+        print("Saved to composition_bars.html")
 
-    return fig
+    return combined_chart
 
 
 """
@@ -574,10 +632,12 @@ def main():
     print(f"Loaded 2025: {len(year25.data):,} records")
 
     # Generate all visualizations
-    fig = create_monthly_heatmap(year15, year25, save=True)
-    fig = create_composition_bars(year15, year25, save=True)
-    fig, drift = create_signature_drift(year15, year25, save=True)
-    fig, labels15, labels25 = create_cluster_comparison(year15, year25, save=True)
+    fig = create_monthly_heatmap(year15, year25, top_n=10, save=True)
+    fig = create_composition_bars(
+        year15, year25, top_n_neighborhoods=10, rf_cutoff=0.02, save=True
+    )
+    # fig, drift = create_signature_drift(year15, year25, save=True)
+    # fig, labels15, labels25 = create_cluster_comparison(year15, year25, save=True)
 
     print("\nAll visualizations displayed!")
 
