@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>D3 Tract Validation Scatterplot</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            background: #ffffff;
+            color: #2c3e50;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 10px 14px 10px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            font-weight: 400;
+            color: #1a1a1a;
+            letter-spacing: 0.2px;
+        }
+
+        p {
+            margin: 0 0 8px;
+            line-height: 1.5;
+            max-width: 860px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 10px 0 8px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        select {
+            padding: 8px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            background: white;
+            font: inherit;
+            color: #2c3e50;
+        }
+
+        .meta {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            color: #495057;
+            font-size: 13px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-left: 3px solid #2c3e50;
+            padding: 8px 10px;
+        }
+
+        .meta strong {
+            color: #1a1a1a;
+        }
+
+        svg {
+            width: 100%;
+            height: 560px;
+            display: block;
+            background: white;
+            border: 1px solid #dee2e6;
+        }
+
+        .tooltip {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0;
+            background: rgba(26, 26, 26, 0.96);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 3px;
+            font-size: 13px;
+            line-height: 1.45;
+            max-width: 260px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+        }
+
+        .note {
+            margin-top: 6px;
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .highlight {
+            stroke: #1a1a1a;
+            stroke-width: 2.5px;
+        }
+
+        .axis path,
+        .axis line {
+            stroke: #adb5bd;
+        }
+
+        .axis text {
+            font-size: 12px;
+            fill: #495057;
+        }
+
+        .grid line {
+            stroke: rgba(44, 62, 80, 0.1);
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class='page'>
+        <h1>Tract-Level Socioeconomic Validation</h1>
+        <p>
+            A simple D3 scatterplot that connects tract poverty rates to complaint outcomes. Hover a point for details
+            and click it to pin the highlight. Use the dropdown to switch the response metric.
+        </p>
+
+        <div class='controls'>
+            <label for='metric-select'>Y-axis metric</label>
+            <select id='metric-select'>
+                <option value='complaint_change_per_1k'>Complaint change per 1k residents</option>
+                <option value='complaints_per_1k_2025'>2025 complaints per 1k residents</option>
+                <option value='complaint_change_2025_minus_2015'>Raw complaint count change</option>
+            </select>
+        </div>
+
+        <div class='meta' id='meta-line'>
+            <div><strong>Source:</strong> data/census_tract_ses_2023_with_311.csv</div>
+            <div><strong>Observations:</strong> loading...</div>
+            <div><strong>Click:</strong> pin a tract</div>
+        </div>
+
+        <svg id='chart' aria-label='Boston tract validation scatter plot'></svg>
+        <div class='note'>
+            Point size reflects population and color reflects median household income.
+        </div>
+    </div>
+
+    <div class='tooltip' id='tooltip'></div>
+    <script src='https://d3js.org/d3.v7.min.js'></script>
+    <script src='tract_d3_scatter.js'></script>
+</body>
+
+</html>
