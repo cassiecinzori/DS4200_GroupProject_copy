@@ -1,0 +1,32 @@
+Design Notes
+Project: Mapping Urban Change Through 311 Service Requests
+
+Published website link:
+https://iasolb.github.io/DS4200_GroupProject/
+
+General design idea:
+We wanted the website to feel like one connected story about how Boston 311 patterns changed from 2015 to 2025. The figures go from a broad overview, to neighborhood comparisons, to change over time, and then to tract-level validation. We kept the webpage style simple so the figures stand out and feel consistent.
+
+Figure 1: Seasonal Patterns in 311 Requests
+This heatmap is the overview figure. We used a grid because it makes monthly patterns easy to compare, especially winter-related request types.
+
+Figure 2: Neighborhood Request Composition Analysis
+We used horizontal grouped bars because the request type names are long and because the main goal is comparing 2015 and 2025 side by side.
+
+Figure 3: Neighborhood Signature Drift Quantification
+This figure is meant to show which neighborhoods changed the most. Sorting the values makes the ranking easier to read, and the reference line helps show what counts as above-average drift.
+
+Figure 4: Cluster Distribution Comparison
+This figure shows how neighborhoods group together based on similar complaint patterns. Different colors make the clusters easier to separate, and the stable/shifted markers help show change across years.
+
+Figure 5: Interactive Neighborhood Request Pattern Comparison
+This figure is for closer inspection of one neighborhood at a time. The dropdown lets the viewer focus on a specific neighborhood, and the legend interaction helps compare years more easily.
+
+Figure 6: Tract-Level Socioeconomic Validation
+This D3 scatter plot was made to compare tract poverty rates with complaint outcomes. We kept the interaction simple: the dropdown changes the y-axis metric, hover shows tract details, and clicking a point pins it. Point size shows population and point color shows income.
+
+Figure 7: Interactive Geographic Visualization
+The map is meant to show where requests are located across the city. Side-by-side maps make the two years easier to compare, and the filters help narrow the view to a neighborhood or request type.
+
+How the figures connect:
+The figures are not meant to be separate. Figure 1 gives the general timing patterns, Figures 2 to 4 explain neighborhood-level differences and change, Figure 5 lets the user explore specific neighborhoods, Figure 6 checks whether the story also appears at the tract level, and Figure 7 brings the analysis back to geography.

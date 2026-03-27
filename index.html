@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -405,10 +406,27 @@
             </p>
         </div>
 
-        <div class="visualization">
-            <h3>Figure 6: Interactive Geographic Visualization</h3>
-            <p>
-                <strong>Interactive Component:</strong> Side-by-side choropleth maps enable spatial comparison of 2015 and 2025 request
+            <div class="visualization">
+                <h3>Figure 6: Tract-Level Socioeconomic Validation</h3>
+                <iframe src="figures/tract_d3_scatter.html" width="100%" height="700" frameborder="0"
+                    style="border: 1px solid #dee2e6;">
+                </iframe>
+                <p>
+                    This D3 scatter plot compares tract-level poverty rates to complaint change outcomes. The y-axis can
+                    be switched
+                    between complaint change per 1,000 residents, 2025 complaints per 1,000 residents, and raw complaint
+                    change. Point size represents tract population and point color represents median household income.
+                    Hover reveals tract details, and clicking a point pins it for closer inspection. The figure is meant
+                    to validate the
+                    neighborhood-level analysis with tract-level socioeconomic context rather than replace the
+                    neighborhood signatures.
+                </p>
+            </div>
+
+            <div class="visualization">
+                <h3>Figure 7: Interactive Geographic Visualization</h3>
+                <p>
+                    <strong>Interactive Component:</strong> Side-by-side choropleth maps enable spatial comparison of 2015 and 2025 request
                 distributions with dynamic filtering by neighborhood and request type. Implementation utilizes Dash and Folium frameworks
                 with marker clustering for performance optimization.
             </p>
@@ -462,6 +480,26 @@
             </p>
         </section>
 
+        <section id="conclusion">
+            <h2>Conclusion and Future Work</h2>
+            <p>
+                Overall, Boston's 311 request patterns suggest that neighborhood change is not evenly distributed across the city. East Boston,
+                South Boston/Waterfront, and South Boston show especially large shifts in complaint composition, while tract-level validation
+                suggests that socioeconomic context helps explain part of the variation in complaint intensity, even if those relationships are
+                modest.
+            </p>
+            <p>
+                One practical takeaway is that 311 data can be useful as a descriptive indicator of neighborhood conditions and change when it
+                is interpreted together with demographic context rather than on its own. A second takeaway is that the strongest signal in this
+                project comes from changes in complaint mix and neighborhood structure, not from any single tract-level correlation.
+            </p>
+            <p>
+                Future work could extend this analysis by adding more years between 2015 and 2025, incorporating response-time or case-resolution
+                variables, and comparing 311 trends with housing, zoning, or transit development data. Those additions would help distinguish
+                whether observed shifts are more strongly related to demographic turnover, infrastructure investment, or changing reporting behavior.
+            </p>
+        </section>
+
         <section id="references">
             <h2>References</h2>
             <div class="references">
@@ -476,6 +514,10 @@
                     <a href="https://doi.org/10.1371/journal.pone.0186314" target="_blank">https://doi.org/10.1371/journal.pone.0186314</a>
                 </p>
             </div>
+            <p style="margin-top: 1rem;">
+                Design rationale document:
+                <a href="design_notes.txt" target="_blank">design_notes.txt</a>
+            </p>
         </section>
     </div>
 
