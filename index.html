@@ -19,10 +19,11 @@
         }
 
         header {
-            background-color: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
             color: white;
             padding: 4rem 2rem 3rem 2rem;
-            border-bottom: 4px solid #2c3e50;
+            border-bottom: 4px solid #3498db;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         header h1 {
@@ -72,8 +73,19 @@
             font-weight: 400;
             margin-bottom: 1.5rem;
             padding-bottom: 0.8rem;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 3px solid #3498db;
             letter-spacing: 0.3px;
+            position: relative;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: #e74c3c;
         }
 
         h3 {
@@ -98,10 +110,17 @@
         }
 
         .stat-box {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border: 1px solid #dee2e6;
+            border-left: 4px solid #3498db;
             padding: 2rem;
             text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
 
         .stat-box h4 {
@@ -119,6 +138,15 @@
 
         .visualization {
             margin: 3rem 0;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            transition: box-shadow 0.2s;
+        }
+        
+        .visualization:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .visualization h3 {
@@ -131,6 +159,13 @@
             height: auto;
             border: 1px solid #dee2e6;
             margin: 1.5rem 0;
+            border-radius: 4px;
+            transition: transform 0.2s;
+        }
+        
+        .visualization img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
         }
 
         .visualization iframe {
