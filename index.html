@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -212,7 +211,7 @@
 <body>
     <header>
         <h1>Mapping Urban Change Through 311 Service Requests</h1>
-        <p>A Comparative Analysis of Boston Neighborhoods (Signatures) and Census Tracts (ACS Validation): 2015 vs 2025</p>
+        <p>A Comparative Analysis of Boston Neighborhoods: 2015 vs 2025</p>
         <div class="team-members">
             <span>Anthony Campos</span>
             <span>Cassandra Cinzori</span>
@@ -235,11 +234,6 @@
                 different income, education, and demographic profiles. By comparing these "signatures" across a decade, we identify 
                 neighborhoods experiencing significant transformation through gentrification, infrastructure investment, or emerging 
                 distress patterns.
-            </p>
-            <p>
-                We analyze complaint composition at the neighborhood level for interpretability (signatures, clusters, and drift), and we 
-                separately assign each complaint to a census tract to merge ACS socioeconomic indicators (poverty, income, population) for 
-                validation.
             </p>
             <p>
                 The 2015-2025 period represents a transformative decade for Boston, characterized by substantial Seaport District development, 
@@ -289,8 +283,7 @@
                 We integrated American Community Survey (ACS) 5-Year estimates (2019-2023) providing census tract-level data on population, 
                 median household income, and poverty rates. Geographic assignment of 311 requests to census tracts via spatial join enables 
                 validation of request patterns against demographic indicators. This approach follows the methodology established by 
-                Wang et al. (2017) for linking 311 data to socioeconomic context. We created a tract-level merged analysis table that is 
-                used for SES validation plots and summary comparisons.
+                Wang et al. (2017) for linking 311 data to socioeconomic context.
             </p>
         </section>
 
@@ -324,87 +317,70 @@
                 Neighborhoods exhibiting high cosine distance experienced significant shifts in their request type distribution, potentially 
                 reflecting demographic transitions, infrastructure investment patterns, or evolving service needs.
             </p>
-            
-            <h3>Tract-Level Socioeconomic Validation</h3>
-            <p>
-                Separately, we assign 311 points to census tracts via spatial join and merge tract-level complaint summaries with ACS 
-                poverty, income, and population. This tract-level layer is used for validation through simple association checks on tract 
-                complaint change and per-capita complaint rates, not for defining the neighborhood signatures.
-            </p>
         </section>
 
         <section id="visualizations">
-        <h2>Visualizations</h2>
+            <h2>Visualizations</h2>
 
-        <div class="visualization">
-            <h3>Figure 1: Seasonal Patterns in 311 Requests</h3>
-            <img src="figures/monthly_heatmap.png" alt="Monthly heatmap visualization">
-            <p>
-                The heatmap displays monthly request volumes by type for 2015 and 2025, revealing pronounced seasonal patterns.
-                Snow removal requests demonstrate expected winter concentration, while infrastructure concerns such as street lighting
-                and pothole repairs maintain relatively consistent year-round frequency. Temporal comparison identifies request types
-                experiencing volume increases or decreases over the study period.
-            </p>
-        </div>
+            <div class="visualization">
+                <h3>Figure 1: Seasonal Patterns in 311 Requests</h3>
+                <img src="1_monthly_heatmap.png" alt="Monthly heatmap visualization">
+                <p>
+                    The heatmap displays monthly request volumes by type for 2015 and 2025, revealing pronounced seasonal patterns. 
+                    Snow removal requests demonstrate expected winter concentration, while infrastructure concerns such as street lighting 
+                    and pothole repairs maintain relatively consistent year-round frequency. Temporal comparison identifies request types 
+                    experiencing volume increases or decreases over the study period.
+                </p>
+            </div>
 
-        <div class="visualization">
-            <h3>Figure 2: Neighborhood Request Composition Analysis</h3>
-            <iframe src="figures/composition_bars.html"
-                    width="100%"
-                    height="600"
-                    frameborder="0"
-                    style="border: 1px solid #dee2e6;">
-            </iframe>
-            <p>
-                Horizontal bar charts compare the top five request types for Boston's six highest-volume neighborhoods. Blue bars
-                represent 2015 data; orange bars represent 2025. The visualization demonstrates heterogeneity in neighborhood priorities
-                and documents compositional shifts occurring over the decade-long study period.
-            </p>
-        </div>
+            <div class="visualization">
+                <h3>Figure 2: Neighborhood Request Composition Analysis</h3>
+                <img src="2_neighborhood_composition.png" alt="Neighborhood composition bar charts">
+                <p>
+                    Horizontal bar charts compare the top five request types for Boston's six highest-volume neighborhoods. Blue bars 
+                    represent 2015 data; orange bars represent 2025. The visualization demonstrates heterogeneity in neighborhood priorities 
+                    and documents compositional shifts occurring over the decade-long study period.
+                </p>
+            </div>
 
-        <div class="visualization">
-            <h3>Figure 3: Neighborhood Signature Drift Quantification</h3>
-            <img src="figures/signature_drift.png" alt="Signature drift analysis">
-            <p>
-                This analysis quantifies change magnitude for each neighborhood using cosine distance between 2015 and 2025 signature
-                vectors. Neighborhoods are rank-ordered by drift magnitude. East Boston, South Boston/Waterfront, and South Boston
-                exhibit the highest drift values, consistent with these areas' documented rapid development and demographic transitions.
-                The median drift threshold (red line) facilitates identification of neighborhoods experiencing above-average transformation.
-            </p>
-        </div>
+            <div class="visualization">
+                <h3>Figure 3: Neighborhood Signature Drift Quantification</h3>
+                <img src="3_signature_drift.png" alt="Signature drift analysis">
+                <p>
+                    This analysis quantifies change magnitude for each neighborhood using cosine distance between 2015 and 2025 signature 
+                    vectors. Neighborhoods are rank-ordered by drift magnitude. East Boston, South Boston/Waterfront, and South Boston 
+                    exhibit the highest drift values, consistent with these areas' documented rapid development and demographic transitions. 
+                    The median drift threshold (red line) facilitates identification of neighborhoods experiencing above-average transformation.
+                </p>
+            </div>
 
-        <div class="visualization">
-            <h3>Figure 4: Cluster Distribution Comparison</h3>
-            <iframe src="figures/cluster_comparison.html"
-                    width="100%"
-                    height="600"
-                    frameborder="0"
-                    style="border: 1px solid #dee2e6;">
-            </iframe>
-            <p>
-                K-means clustering groups neighborhoods into four distinct profiles based on 311 request signatures. Side-by-side
-                comparison documents redistribution of neighborhoods across clusters between 2015 and 2025. Cluster membership transitions
-                suggest systematic shifts in service request profiles, potentially reflecting broader patterns of gentrification,
-                infrastructure investment allocation, or demographic change.
-            </p>
-        </div>
+            <div class="visualization">
+                <h3>Figure 4: Cluster Distribution Comparison</h3>
+                <img src="4_clusters.png" alt="Cluster comparison visualization">
+                <p>
+                    K-means clustering groups neighborhoods into four distinct profiles based on 311 request signatures. Side-by-side 
+                    comparison documents redistribution of neighborhoods across clusters between 2015 and 2025. Cluster membership transitions 
+                    suggest systematic shifts in service request profiles, potentially reflecting broader patterns of gentrification, 
+                    infrastructure investment allocation, or demographic change.
+                </p>
+            </div>
 
-        <div class="visualization">
-            <h3>Figure 5: Interactive Neighborhood Request Pattern Comparison</h3>
-            <iframe src="interactive_neighborhood_comparison.html"
-                    width="100%"
-                    height="750"
-                    frameborder="0"
-                    style="border: 1px solid #dee2e6;">
-            </iframe>
-            <p>
-                This interactive visualization allows exploration of request patterns for individual neighborhoods.
-                Use the dropdown to select any Boston neighborhood and click the legend to toggle between 2015
-                and 2025 data. Request types are displayed alphabetically with grouped bars showing year-over-year comparison.
-                This Altair-based visualization enables detailed examination of how specific neighborhoods' complaint profiles
-                evolved over the study period.
-            </p>
-        </div>
+            <div class="visualization">
+                <h3>Figure 5: Interactive Neighborhood Request Pattern Comparison</h3>
+                <iframe src="interactive_neighborhood_comparison.html" 
+                        width="100%" 
+                        height="750" 
+                        frameborder="0"
+                        style="border: 1px solid #dee2e6;">
+                </iframe>
+                <p>
+                    This interactive visualization allows exploration of request patterns for individual neighborhoods. 
+                    Use the dropdown to select any Boston neighborhood and click the legend to toggle between 2015 
+                    and 2025 data. Request types are displayed alphabetically with grouped bars showing year-over-year comparison.
+                    This Altair-based visualization enables detailed examination of how specific neighborhoods' complaint profiles 
+                    evolved over the study period.
+                </p>
+            </div>
 
             <div class="visualization">
                 <h3>Figure 6: Tract-Level Socioeconomic Validation</h3>
@@ -413,26 +389,38 @@
                 </iframe>
                 <p>
                     This D3 scatter plot compares tract-level poverty rates to complaint change outcomes. The y-axis can
-                    be switched
-                    between complaint change per 1,000 residents, 2025 complaints per 1,000 residents, and raw complaint
+                    be switched between complaint change per 1,000 residents, 2025 complaints per 1,000 residents, and raw complaint
                     change. Point size represents tract population and point color represents median household income.
                     Hover reveals tract details, and clicking a point pins it for closer inspection. The figure is meant
-                    to validate the
-                    neighborhood-level analysis with tract-level socioeconomic context rather than replace the
+                    to validate the neighborhood-level analysis with tract-level socioeconomic context rather than replace the
                     neighborhood signatures.
                 </p>
             </div>
 
             <div class="visualization">
-                <h3>Figure 7: Interactive Geographic Visualization</h3>
+                <h3>Figure 7: Interactive Side-by-Side Geographic Map</h3>
                 <p>
-                    <strong>Interactive Component:</strong> Side-by-side choropleth maps enable spatial comparison of 2015 and 2025 request
-                distributions with dynamic filtering by neighborhood and request type. Implementation utilizes Dash and Folium frameworks
-                with marker clustering for performance optimization.
-            </p>
-            <p>Execute <code>map_app.py</code> to access the interactive visualization interface.</p>
-        </div>
-    </section>
+                    <strong>Interactive Dash Application:</strong> This visualization displays 2015 and 2025 311 request locations 
+                    side-by-side using Folium maps with marker clustering. Users can filter by neighborhood and request type through 
+                    dropdown menus in the left sidebar. Maps update dynamically to show filtered results, enabling direct spatial 
+                    comparison across the decade.
+                </p>
+                <p>
+                    <strong>How to Access:</strong> Execute <code>python map_app.py</code> from the project directory, then navigate to 
+                    <code>http://localhost:8050</code> in your browser.
+                </p>
+                <p>
+                    <strong>Interaction Features:</strong> 
+                </p>
+                <ul>
+                    <li>Dropdown filtering by neighborhood (left sidebar)</li>
+                    <li>Dropdown filtering by request type (updates based on neighborhood selection)</li>
+                    <li>Marker clustering automatically groups nearby requests for better performance</li>
+                    <li>Click markers to view case details and location information</li>
+                    <li>Synchronized side-by-side view enables direct 2015 vs 2025 comparison</li>
+                </ul>
+            </div>
+        </section>
 
         <section id="findings">
             <h2>Findings</h2>
@@ -441,9 +429,8 @@
             <p>
                 East Boston, South Boston/Waterfront, and South Boston demonstrate the most substantial signature drift values, indicating 
                 dramatic shifts in request pattern composition. These findings are consistent with prior narratives about rapid development 
-                and gentrification 
-                in these areas during the study period. The Seaport District's transformation from industrial zone to high-density mixed-use 
-                development may be reflected in evolving complaint patterns.
+                and gentrification in these areas during the study period. The Seaport District's transformation from industrial zone to 
+                high-density mixed-use development may be reflected in evolving complaint patterns.
             </p>
 
             <h3>Tract-Level Socioeconomic Validation</h3>
@@ -477,6 +464,26 @@
                 Redistribution of neighborhoods across cluster assignments between 2015 and 2025 indicates systematic reorganization of 
                 Boston's service request profile landscape. This restructuring may reflect broader demographic and economic transitions 
                 occurring citywide, with implications for resource allocation and service delivery planning.
+            </p>
+        </section>
+
+        <section id="conclusion">
+            <h2>Conclusion and Future Work</h2>
+            <p>
+                Overall, Boston's 311 request patterns suggest that neighborhood change is not evenly distributed across the city. East Boston,
+                South Boston/Waterfront, and South Boston show especially large shifts in complaint composition, while tract-level validation
+                suggests that socioeconomic context helps explain part of the variation in complaint intensity, even if those relationships are
+                modest.
+            </p>
+            <p>
+                One practical takeaway is that 311 data can be useful as a descriptive indicator of neighborhood conditions and change when it
+                is interpreted together with demographic context rather than on its own. A second takeaway is that the strongest signal in this
+                project comes from changes in complaint mix and neighborhood structure, not from any single tract-level correlation.
+            </p>
+            <p>
+                Future work could extend this analysis by adding more years between 2015 and 2025, incorporating response-time or case-resolution
+                variables, and comparing 311 trends with housing, zoning, or transit development data. Those additions would help distinguish
+                whether observed shifts are more strongly related to demographic turnover, infrastructure investment, or changing reporting behavior.
             </p>
         </section>
 
